@@ -167,3 +167,78 @@ Spring JDBC를 이용한 DAO 작성 실습
         }
     }
     ~~~
+3. JDBC 실습(INSERT, UPDATE)
+* INSERT 쿼리를 실행하기 위해서 RoleDao.class에 SimpleJdbcInsert를 추가
+    ~~~
+    @Repository
+    public class RoleDao {
+        private NamedParameterJdbcTemplate jdbc;
+        private SimpleJdbcInsert insertAction;
+        private RowMapper<Role> rowMapper = BeanPropertyRowMapper.newInstance(Role.class);
+    
+        public RoleDao(DataSource dataSource){
+            this.jdbc = new NamedParameterJdbcTemplate(dataSource);
+            this.insertAction = new SimpleJdbcInsert(dataSource).withTableName("role");
+        }
+    
+        public List<Role> selectAll(){
+            return jdbc.query(SELECT_ALL, rowMapper);
+        }
+    }
+    ~~~
+* INSERT문을 Role.class에 추가
+    * 참고로 INSERT문은 따로 RoleDaoSqls.class에 쿼리를 작성하지 않아도된다.
+    ~~~
+    public int insert(Role role){
+            SqlParameterSource parameterSource = new BeanPropertySqlParameterSource(role);
+            return insertAction.execute(parameterSource);
+        }
+    ~~~
+    * Role객체를 인자로 받아들여 해당 Role 객체에 있는 값을 웹으로 바꿔준 후 SimpleJdbcInsert
+    에 바꿔준 값을 execute메소드의 인자로 전달하면 값이 저장되게 된다.
+* INSERT문이 잘 실행되는지 테스트
+    ~~~
+     public class JDBCTest {
+        public static void main(String[] args) {
+            ApplicationContext ac = new AnnotationConfigApplicationContext(ApplicationConfig.class);
+    
+            RoleDao roleDao = ac.getBean(RoleDao.class);
+    
+            Role role = new Role();
+            role.setRoleId(3001);
+            role.setDescription("CEO");
+    
+            int count = roleDao.insert(role);
+            System.out.println(count + "건 입력하였습니다.");
+        }
+    }
+    ~~~
+* UPDATE문을 실행하기 위해 RoleDaoSqls.class에 쿼리 추가
+    ~~~
+    public static final String UPDATE = "UPDATE role SET description = :description WHERE ROLE_ID = :roleId";
+    ~~~
+    * 쿼리문 안에 :description과 :roleId이 나중에 값으로 바인딩 될 부분이다.
+* RoleDao.class에 UPDATE문 작성
+    ~~~
+     public int update(Role role){
+            SqlParameterSource params = new BeanPropertySqlParameterSource(role);
+            return jdbc.update(UPDATE, params);
+        }
+    ~~~
+* UPDATE문 테스트
+    ~~~
+    public class JDBCTest {
+        public static void main(String[] args) {
+            ApplicationContext ac = new AnnotationConfigApplicationContext(ApplicationConfig.class);
+    
+            RoleDao roleDao = ac.getBean(RoleDao.class);
+    
+            Role role = new Role();
+            role.setRoleId(100);
+            role.setDescription("PROGRAMMER");
+    
+            int count = roleDao.update(role);
+            System.out.println(count + "건 수정되었습니다.");
+        }
+    }
+    ~~~
