@@ -1,6 +1,7 @@
 package kr.or.connect.dao;
 
 import kr.or.connect.DTO.Role;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
@@ -12,9 +13,9 @@ import org.springframework.stereotype.Repository;
 import javax.sql.DataSource;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
-import static kr.or.connect.dao.RoleDaoSqls.SELECT_ALL;
-import static kr.or.connect.dao.RoleDaoSqls.UPDATE;
+import static kr.or.connect.dao.RoleDaoSqls.*;
 
 @Repository
 public class RoleDao {
@@ -39,5 +40,19 @@ public class RoleDao {
     public int update(Role role){
         SqlParameterSource params = new BeanPropertySqlParameterSource(role);
         return jdbc.update(UPDATE, params);
+    }
+
+    public int deleteById(Integer id){
+        Map<String, ?> params = Collections.singletonMap("roleId", id);
+        return jdbc.update(DELETE_BY_ROLE_ID, params);
+    }
+
+    public Role select(Integer id){
+        try {
+            Map<String, ?> params = Collections.singletonMap("roleId", id);
+            return jdbc.queryForObject(SELECT_BY_ROLE_ID, params, rowMapper);
+        } catch(EmptyResultDataAccessException e){
+            return null;
+        }
     }
 }

@@ -242,3 +242,45 @@ Spring JDBC를 이용한 DAO 작성 실습
         }
     }
     ~~~
+4. JDBC 실습 (1건 SELECT, DELETE)
+* RoleDaoSqls.class에 1건 SELECT하는 쿼리와 DELETE하는 쿼리문을 추가
+    ~~~
+    public static final String SELECT_BY_ROLE_ID = "SELECT role_id, description FROM role where role_id = :roleId";
+    public static final String DELETE_BY_ROLE_ID = "DELETE FROM role WHERE role_id = :roleId";
+    ~~~
+    * 쿼리문을 작성할때 모든 컬럼을 가져온다해도 *보다는 각각의 컬럼명을 나열해주는것이 훨씬 의미 전달이 명확하기 때문에 각각의 컬럼명을 나열하는것을 지향한다.
+* RoleDao.class에 1건 SELECT하는 메서드와 DELETE하는 메서드를 추가
+    ~~~
+    public int deleteById(Integer id){
+            Map<String, ?> params = Collections.singletonMap("roleId", id);
+            return jdbc.update(DELETE_BY_ROLE_ID, params);
+        }
+    ~~~
+    * Collection.singletonMap 메소드를 사용하는 이유는 바인딩되는값이 한가지 밖에 없기 때문에 다른 메소드처럼 SqlParameterSource를 사용할 필요는 없다.
+    ~~~
+        public Role select(Integer id){
+            try {
+                Map<String, ?> params = Collections.singletonMap("roleId", id);
+                return jdbc.queryForObject(SELECT_BY_ROLE_ID, params, rowMapper);
+            } catch(EmptyResultDataAccessException e){
+                return null;
+            }
+        }
+    ~~~
+    * 1건 SELECT 할 때는 queryForObject 메소드를 사용한다.
+* 테스트
+    ~~~
+    public class JDBCTest {
+        public static void main(String[] args) {
+            ApplicationContext ac = new AnnotationConfigApplicationContext(ApplicationConfig.class);
+    
+            RoleDao roleDao = ac.getBean(RoleDao.class);
+    
+            Role role = roleDao.select(101);
+            System.out.println(role);
+    
+            int count = roleDao.deleteById(3001);
+            System.out.println(count + "건 삭제 했습니다.");
+        }
+    }
+    ~~~

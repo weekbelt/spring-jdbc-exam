@@ -14,11 +14,10 @@ public class JDBCTest {
 
         RoleDao roleDao = ac.getBean(RoleDao.class);
 
-        Role role = new Role();
-        role.setRoleId(100);
-        role.setDescription("PROGRAMMER");
+        Role role = roleDao.select(101);
+        System.out.println(role);
 
-        int count = roleDao.update(role);
-        System.out.println(count + "건 수정되었습니다.");
+        int count = roleDao.deleteById(3001);
+        System.out.println(count + "건 삭제 했습니다.");
     }
 }
